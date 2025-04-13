@@ -22,6 +22,13 @@ export async function GetNoteDetail(page: Page): Promise<NoteDetail> {
   await page.waitForSelector(".media-container");
 
   async function getContent() {
+    function ChineseUnitStrToNumber(str: string) {
+      if (str.includes("万")) {
+        return Number(str.replace("万", "")) * 10000;
+      } else {
+        return Number(str);
+      }
+    }
     // Get main article content
     const article = document.querySelector(".note-container");
     if (!article) throw new Error("Article not found");
@@ -83,8 +90,8 @@ export async function GetNoteDetail(page: Page): Promise<NoteDetail> {
       imgs,
       videos,
       url: "",
-      likes: Number(likesNumber),
-      comments: Number(commentsNumber),
+      likes: ChineseUnitStrToNumber(likesNumber),
+      comments: ChineseUnitStrToNumber(commentsNumber),
     } as Note;
   }
 
