@@ -1,21 +1,19 @@
 import { Note } from "./rednoteTools";
 
-async function getNoteDetail(page: Page, url: string): Promise<Note> {
-  await page.goto(url);
-
+export async function GetNoteDetail(page: Page): Promise<Note> {
   // Wait for content to load
   logger.info("Waiting for content to load");
-  await this.page.waitForSelector("note-container");
-  await this.page.waitForSelector("media-container");
+  await this.page.waitForSelector(".note-container");
+  await this.page.waitForSelector(".media-container");
 
   function getContent() {
     // Get main article content
-    const article = document.querySelector("main article");
+    const article = document.querySelector(".note-container");
     if (!article) throw new Error("Article not found");
 
     // Get title from h1 or first text block
     const title =
-      article.querySelector("h1")?.textContent?.trim() ||
+      article.querySelector("#detail-title")?.textContent?.trim() ||
       article.querySelector(".title")?.textContent?.trim() ||
       "";
 
@@ -23,7 +21,7 @@ async function getNoteDetail(page: Page, url: string): Promise<Note> {
     const contentBlock = article.querySelector(".note-scroller");
     if (!contentBlock) throw new Error("Content block not found");
     const content =
-      contentBlock
+      contentBlockn
         .querySelector(".note-content .note-text span")
         ?.textContent?.trim() || "";
     // Get tags from article text
@@ -45,26 +43,12 @@ async function getNoteDetail(page: Page, url: string): Promise<Note> {
       return img.src;
     });
 
-    // Get interaction counts
-    const likesElement = article.querySelector(
-      '.like-count, [data-testid="likes-count"]'
-    );
-    const likes = parseInt(likesElement?.textContent || "0");
-
-    const commentsElement = article.querySelector(
-      '.comment-count, [data-testid="comments-count"]'
-    );
-    const comments = parseInt(commentsElement?.textContent || "0");
-
     return {
       title,
       content,
       tags,
-      url: url,
       author,
-      likes,
-      collects: 0,
-      comments,
+      url: "",
     };
   }
 

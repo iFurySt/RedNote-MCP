@@ -1,6 +1,7 @@
 import { AuthManager } from "../auth/authManager";
 import { Browser, Page } from "playwright";
 import logger from "../utils/logger";
+import { GetNoteDetail } from "./noteDetail";
 
 export interface Note {
   title: string;
@@ -8,9 +9,9 @@ export interface Note {
   tags: string[];
   url: string;
   author: string;
-  likes: number;
-  collects: number;
-  comments: number;
+  likes?: number;
+  collects?: number;
+  comments?: number;
 }
 
 export interface Comment {
@@ -223,60 +224,8 @@ export class RedNoteTools {
 
     try {
       await this.page.goto(url);
-
-      // Wait for content to load
-      logger.info("Waiting for content to load");
-      await this.page.waitForSelector("main article");
-
-      // Extract note content
-      const note = await this.page.evaluate(() => {
-        // Get main article content
-        const article = document.querySelector("main article");
-        if (!article) throw new Error("Article not found");
-
-        // Get title from h1 or first text block
-        const title =
-          article.querySelector("h1")?.textContent?.trim() ||
-          article.querySelector(".title")?.textContent?.trim() ||
-          "";
-
-        // Get content from article text
-        const contentBlocks = Array.from(
-          article.querySelectorAll("p, .content")
-        );
-        const content = contentBlocks
-          .map((block) => block.textContent?.trim())
-          .filter(Boolean)
-          .join("\n");
-
-        // Get author info
-        const authorElement = article.querySelector(
-          '.author, [data-testid="author-name"]'
-        );
-        const author = authorElement?.textContent?.trim() || "";
-
-        // Get interaction counts
-        const likesElement = article.querySelector(
-          '.like-count, [data-testid="likes-count"]'
-        );
-        const likes = parseInt(likesElement?.textContent || "0");
-
-        const commentsElement = article.querySelector(
-          '.comment-count, [data-testid="comments-count"]'
-        );
-        const comments = parseInt(commentsElement?.textContent || "0");
-
-        return {
-          title,
-          content,
-          url: window.location.href,
-          author,
-          likes,
-          collects: 0,
-          comments,
-        };
-      });
-
+      let note = await GetNoteDetail(this.page, url);
+      note.url = url;
       logger.info(`Successfully extracted note: ${note.title}`);
       return note;
     } catch (error) {
