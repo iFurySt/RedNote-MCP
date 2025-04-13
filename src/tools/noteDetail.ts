@@ -24,7 +24,7 @@ export async function GetNoteDetail(page: Page): Promise<NoteDetail> {
   async function getContent() {
     function ChineseUnitStrToNumber(str: string) {
       if (str.includes("万")) {
-        return Number(str.replace("万", "")) * 10000;
+        return Number(str.replace("万", "").trim()) * 10000;
       } else {
         return Number(str);
       }
