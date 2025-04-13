@@ -1,7 +1,7 @@
 import { AuthManager } from "../auth/authManager";
 import { Browser, Page } from "playwright";
 import logger from "../utils/logger";
-import { GetNoteDetail } from "./noteDetail";
+import { GetNoteDetail, NoteDetail } from "./noteDetail";
 
 export interface Note {
   title: string;
@@ -173,7 +173,7 @@ export class RedNoteTools {
 
           if (note) {
             logger.info(`Extracted note: ${note.title}`);
-            notes.push(note);
+            notes.push(note as Note);
           }
 
           // Add random delay before closing
@@ -217,14 +217,14 @@ export class RedNoteTools {
     }
   }
 
-  async getNoteContent(url: string): Promise<Note> {
+  async getNoteContent(url: string): Promise<NoteDetail> {
     logger.info(`Getting note content for URL: ${url}`);
     await this.initialize();
     if (!this.page) throw new Error("Page not initialized");
 
     try {
       await this.page.goto(url);
-      let note = await GetNoteDetail(this.page, url);
+      let note = await GetNoteDetail(this.page);
       note.url = url;
       logger.info(`Successfully extracted note: ${note.title}`);
       return note;

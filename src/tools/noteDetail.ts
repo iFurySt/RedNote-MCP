@@ -1,12 +1,27 @@
 import { Note } from "./rednoteTools";
+import logger from "../utils/logger";
+import { Page } from "playwright";
 
-export async function GetNoteDetail(page: Page): Promise<Note> {
+export interface NoteDetail {
+  title: string;
+  content: string;
+  tags: string[];
+  imgs?: string[];
+  videos?: string[];
+  url: string;
+  author: string;
+  likes?: number;
+  collects?: number;
+  comments?: number;
+}
+
+export async function GetNoteDetail(page: Page): Promise<NoteDetail> {
   // Wait for content to load
   logger.info("Waiting for content to load");
-  await this.page.waitForSelector(".note-container");
-  await this.page.waitForSelector(".media-container");
+  await page.waitForSelector(".note-container");
+  await page.waitForSelector(".media-container");
 
-  function getContent() {
+  async function getContent() {
     // Get main article content
     const article = document.querySelector(".note-container");
     if (!article) throw new Error("Article not found");
@@ -21,26 +36,43 @@ export async function GetNoteDetail(page: Page): Promise<Note> {
     const contentBlock = article.querySelector(".note-scroller");
     if (!contentBlock) throw new Error("Content block not found");
     const content =
-      contentBlockn
+      contentBlock
         .querySelector(".note-content .note-text span")
         ?.textContent?.trim() || "";
     // Get tags from article text
     const tags = Array.from(
       contentBlock?.querySelectorAll(".note-content .note-text a")
     ).map((tag) => {
-      return tag.textContent?.trim() || "";
+      return tag.textContent?.trim().replace("#", "") || "";
     });
 
     // Get author info
     const authorElement = article.querySelector(".author-container .info");
     const authorAvatarURL =
-      authorElement?.querySelector(".avatar-item")?.src || "";
-    const author = authorElement?.querySelector(".username")?.trim() || "";
+      authorElement?.querySelector(".avatar-item")?.getAttribute("src") || "";
+    const author =
+      authorElement?.querySelector(".username")?.textContent?.trim() || "";
 
-    const contentImages = Array.from(
+    const interactContainer = document.querySelector(".interact-container");
+    const commentsNumber =
+      interactContainer
+        ?.querySelector(".chat-wrapper .count")
+        ?.textContent?.trim() || "";
+    const likesNumber =
+      interactContainer
+        ?.querySelector(".like-wrapper .count")
+        ?.textContent?.trim() || "";
+
+    const imgs = Array.from(
       document.querySelectorAll(".media-container img")
     ).map((img) => {
-      return img.src;
+      return img.getAttribute("src") || "";
+    });
+
+    const videos = Array.from(
+      document.querySelectorAll(".media-container video")
+    ).map((video) => {
+      return video.getAttribute("src") || "";
     });
 
     return {
@@ -48,9 +80,13 @@ export async function GetNoteDetail(page: Page): Promise<Note> {
       content,
       tags,
       author,
+      imgs,
+      videos,
       url: "",
-    };
+      likes: Number(likesNumber),
+      comments: Number(commentsNumber),
+    } as Note;
   }
 
-  return await this.page.evaluate(getContent);
+  return await page.evaluate(getContent);
 }
