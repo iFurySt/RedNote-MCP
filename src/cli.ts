@@ -164,13 +164,28 @@ if (process.argv.includes('--stdio')) {
   program.name(name).description(description).version(version)
 
   program
-    .command('init')
+    .command('init [timeout]')
     .description('Initialize and login to RedNote')
-    .action(async () => {
-      logger.info('Starting initialization process')
+    .argument('[timeout]', 'Login timeout in seconds', (value: string) => parseInt(value, 10), 10)
+    .usage('[options] [timeout]')
+    .addHelpText('after', `
+Examples:
+  $ rednote-mcp init           # Login with default 10 seconds timeout
+  $ rednote-mcp init 30        # Login with 30 seconds timeout
+  $ rednote-mcp init --help    # Display help information
+
+Notes:
+  This command will launch a browser and open the RedNote login page.
+  Please complete the login in the opened browser window.
+  After successful login, the cookies will be automatically saved for future operations.
+  The [timeout] parameter specifies the maximum waiting time (in seconds) for login, default is 10 seconds.
+  The command will fail if the login is not completed within the specified timeout period.`)
+    .action(async (timeout: number) => {
+      logger.info(`Starting initialization process with timeout: ${timeout}s`)
+
       try {
         const authManager = new AuthManager()
-        await authManager.login()
+        await authManager.login({ timeout })
         await authManager.cleanup()
         logger.info('Initialization successful')
         console.log('Login successful! Cookie has been saved.')

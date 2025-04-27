@@ -57,9 +57,14 @@ export class AuthManager {
     return await this.cookieManager.loadCookies();
   }
 
-  async login(): Promise<void> {
-    logger.info('Starting login process');
-    this.browser = await chromium.launch({headless: false});
+  async login(options?: {timeout?: number}): Promise<void> {
+    const timeoutSeconds = options?.timeout || 10
+    logger.info(`Starting login process with timeout: ${timeoutSeconds}s`)
+    const timeoutMs = timeoutSeconds * 1000
+    this.browser = await chromium.launch({
+      headless: false,
+      timeout: timeoutMs,
+    })
     if (!this.browser) {
       logger.error('Failed to launch browser');
       throw new Error('Failed to launch browser');
@@ -85,7 +90,7 @@ export class AuthManager {
         logger.info('Navigating to explore page');
         await this.page.goto('https://www.xiaohongshu.com/explore', {
           waitUntil: 'domcontentloaded',
-          timeout: 10000
+          timeout: timeoutMs
         });
 
         // Check if already logged in
@@ -108,19 +113,19 @@ export class AuthManager {
         logger.info('Waiting for login dialog');
         // Wait for login dialog if not logged in
         await this.page.waitForSelector('.login-container', {
-          timeout: 10000
+          timeout: timeoutMs
         });
 
         // Wait for QR code image
         logger.info('Waiting for QR code');
         const qrCodeImage = await this.page.waitForSelector('.qrcode-img', {
-          timeout: 10000
+          timeout: timeoutMs
         });
 
         // Wait for user to complete login
         logger.info('Waiting for user to complete login');
         await this.page.waitForSelector('.user.side-bar-component .channel', {
-          timeout: 60000
+          timeout: timeoutMs * 6
         });
 
         // Verify the text content
