@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/ifuryst-rednote-mcp-badge.png)](https://mseep.ai/app/ifuryst-rednote-mcp)
+
 # RedNote MCP
 
 [![English](https://img.shields.io/badge/English-Click-yellow)](docs/README.en.md)
